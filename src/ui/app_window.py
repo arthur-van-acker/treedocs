@@ -40,6 +40,8 @@ class AppWindow(ctk.CTk):
         # + and - buttons removed, but button_frame remains for layout
         self.folder_tree = ttk.Treeview(self.left_frame)
         self.folder_tree.pack(fill="both", expand=True, padx=10, pady=(2,10))
+        # Step 2: Bind double-click to print selected file path
+        self.folder_tree.bind('<Double-1>', self.on_treeview_double_click)
 
         # Center and right panes (equal initial size, resizable)
         self.center_frame = ctk.CTkFrame(self.paned_window, fg_color="#ffffff")
@@ -49,7 +51,7 @@ class AppWindow(ctk.CTk):
 
         # Step 1: Add a basic tk.Text widget to center pane
         self.text_editor = tk.Text(self.center_frame)
-        self.text_editor.pack(fill="both", expand=True, padx=10, pady=10)
+        self.text_editor.pack(fill="both", expand=True)
 
         # Menu bar setup
         menubar = tk.Menu(self)
@@ -64,27 +66,36 @@ class AppWindow(ctk.CTk):
         # Context menu for creating files
         self.left_context_menu = tk.Menu(self.left_frame, tearoff=0)
         self.left_context_menu.add_command(label="New .txt file", command=self.create_txt_file)
-        self.left_context_menu.add_command(label="New .md file", command=self.create_md_file)
-        self.left_context_menu.add_command(label="New folder", command=self.create_folder)
-        self.left_context_menu.add_separator()
-        self.left_context_menu.add_command(label="Open explorer", command=lambda: self.open_explorer_workspace())
-        self.left_frame.bind("<Button-3>", self.show_left_context_menu)
-
-        self.file_context_menu = tk.Menu(self.left_frame, tearoff=0)
-        self.file_context_menu.add_command(label="New .txt file", command=lambda: self.create_txt_file(in_selected_folder=True))
-        self.file_context_menu.add_command(label="New .md file", command=lambda: self.create_md_file(in_selected_folder=True))
-        self.file_context_menu.add_command(label="New folder", command=lambda: self.create_folder(in_selected_folder=True))
-        self.file_context_menu.add_separator()
-        self.file_context_menu.add_command(label="Open explorer", command=self.open_explorer_selected)
-        self.file_context_menu.add_separator()
-        self.file_context_menu.add_command(label="Rename", command=self.rename_selected_file)
-        self.file_context_menu.add_command(label="Delete", command=self.delete_selected_file)
-        self.folder_tree.bind("<Button-3>", self.show_tree_context_menu)
 
         # Load workspace on startup
         self.load_workspace_from_config()
         # Start auto-refresh for treeview
         self.start_auto_refresh()
+
+    def on_treeview_double_click(self, event):
+        selected = self.folder_tree.selection()
+        if not selected:
+            print("[DEBUG] No item selected.")
+            return
+        item = selected[0]
+        if not hasattr(self, '_item_to_path') or item not in self._item_to_path:
+            print("[DEBUG] No path mapping for item.")
+            return
+        file_path = self._item_to_path[item]
+        print(f"[DEBUG] Double-clicked file path: {file_path}")
+        # Step 3: Load file content into text editor
+        if os.path.isfile(file_path):
+            try:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                print(f"[DEBUG] Text editor widget: {self.text_editor}")
+                self.text_editor.delete('1.0', tk.END)
+                self.text_editor.insert(tk.END, content)
+                print(f"[DEBUG] Inserted content into text editor.")
+            except Exception as e:
+                print(f"[DEBUG] Failed to load file: {e}")
+        else:
+            print("[DEBUG] Selected item is not a file.")
 
     def open_explorer_workspace(self):
         import subprocess
