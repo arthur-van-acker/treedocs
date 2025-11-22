@@ -79,6 +79,9 @@ class AppWindow(ctk.CTk):
 
         # Load workspace on startup
         self.load_workspace_from_config()
+        # Start auto-refresh for treeview
+        self.start_auto_refresh()
+
     def open_explorer_workspace(self):
         import subprocess
         import platform
@@ -263,6 +266,30 @@ class AppWindow(ctk.CTk):
         if folder:
             self.show_folder_contents(folder)
 
+    def start_auto_refresh(self, interval_ms=2000):
+        self._last_snapshot = self._get_folder_snapshot(self.current_folder)
+        self._auto_refresh_interval = interval_ms
+        self._auto_refresh()
+
+    def _get_folder_snapshot(self, folder):
+        snapshot = set()
+        for root, dirs, files in os.walk(folder):
+            for d in dirs:
+                snapshot.add(os.path.join(root, d))
+            for f in files:
+                snapshot.add(os.path.join(root, f))
+        return snapshot
+
+    def _auto_refresh(self):
+        if not self.current_folder:
+            self.after(self._auto_refresh_interval, self._auto_refresh)
+            return
+        current_snapshot = self._get_folder_snapshot(self.current_folder)
+        if getattr(self, '_last_snapshot', None) != current_snapshot:
+            self.show_folder_contents(self.current_folder)
+            self._last_snapshot = current_snapshot
+        self.after(self._auto_refresh_interval, self._auto_refresh)
+
     def show_folder_contents(self, folder):
         import os
         self.current_folder = folder
@@ -307,6 +334,8 @@ class AppWindow(ctk.CTk):
         for item, path in getattr(self, '_item_to_path', {}).items():
             if path in expanded_paths:
                 self.folder_tree.item(item, open=True)
+        # At the end of show_folder_contents, update snapshot
+        self._last_snapshot = self._get_folder_snapshot(folder)
 
     def _insert_tree_items(self, path, parent, level=0):
         import os
