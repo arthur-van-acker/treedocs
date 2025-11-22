@@ -16,6 +16,7 @@ class AppWindow(ctk.CTk):
         self.geometry("2500x1250+10+10")
         self.iconbitmap(resource_path("assets/favicon.ico"))
 
+
         # Load folder icon
         try:
             from logic.icons import Icons
@@ -33,7 +34,6 @@ class AppWindow(ctk.CTk):
 
         # Left pane for folder contents (min width 500px)
         self.left_frame = ctk.CTkFrame(self.paned_window, fg_color="#f5f5f5")
-        self.left_frame.pack_propagate(False)
         self.left_frame.configure(width=300)
         self.paned_window.add(self.left_frame, minsize=300)
         self.folder_label_var = tk.StringVar()
@@ -77,9 +77,11 @@ class AppWindow(ctk.CTk):
         menubar.add_cascade(label="Help")
         self.config(menu=menubar)
 
-        # Context menu for creating files
-        self.left_context_menu = tk.Menu(self.left_frame, tearoff=0)
-        self.left_context_menu.add_command(label="New .txt file", command=self.create_txt_file)
+        # Workspace context menu for workspace actions
+        self.workspace_context_menu = tk.Menu(self.left_frame, tearoff=0)
+        self.workspace_context_menu.add_command(label="Open in Explorer", command=self.open_explorer_workspace)
+        self.workspace_context_menu.add_command(label="Create .txt file", command=self.create_txt_file)
+        self.workspace_context_menu.add_command(label="Create .md file", command=self.create_md_file)
 
         # Load workspace on startup
         self.load_workspace_from_config()
@@ -177,18 +179,39 @@ class AppWindow(ctk.CTk):
             WorkspaceConfig.save(folder_selected)
             self.show_folder_contents(folder_selected)
 
-    def show_left_context_menu(self, event):
+    def show_workspace_context_menu(self, event):
         # TODO: Use logic to determine current folder
-        self.left_context_menu.tk_popup(event.x_root, event.y_root)
+        self.workspace_context_menu.tk_popup(event.x_root, event.y_root)
 
     def show_tree_context_menu(self, event):
-        # TODO: Use logic to determine selected file/folder
         item_id = self.folder_tree.identify_row(event.y)
         if item_id:
             self.folder_tree.selection_set(item_id)
-            self.file_context_menu.tk_popup(event.x_root, event.y_root)
+            # Determine if selected item is file or folder
+            path = self._item_to_path.get(item_id)
+            if path and os.path.isdir(path):
+                self.folder_context_menu.tk_popup(event.x_root, event.y_root)
+            else:
+                self.file_context_menu.tk_popup(event.x_root, event.y_root)
         else:
-            self.left_context_menu.tk_popup(event.x_root, event.y_root)
+            self.workspace_context_menu.tk_popup(event.x_root, event.y_root)
+    def edit_selected_file(self):
+        selected = self.folder_tree.selection()
+        if not selected:
+            return
+        item = selected[0]
+        if not hasattr(self, '_item_to_path') or item not in self._item_to_path:
+            return
+        file_path = self._item_to_path[item]
+        if os.path.isfile(file_path):
+            try:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                self.text_editor.delete('1.0', tk.END)
+                self.text_editor.insert(tk.END, content)
+                self.current_file_path = file_path
+            except Exception:
+                pass
 
     def create_txt_file(self, in_selected_folder=False):
         import tkinter.simpledialog
