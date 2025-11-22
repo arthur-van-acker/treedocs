@@ -26,8 +26,6 @@ class AppWindow(ctk.CTk):
         # Taskbar frame below menu bar
         self.taskbar_frame = tk.Frame(self, bg="#e0e0e0")
         self.taskbar_frame.pack(fill="x")
-        # Add placeholder to make taskbar visible
-        tk.Label(self.taskbar_frame, text="Taskbar", bg="#e0e0e0", font=("Segoe UI", 10, "bold")).pack(side="left", padx=10, pady=4)
 
         # PanedWindow for resizable panes
         self.paned_window = tk.PanedWindow(self, orient=tk.HORIZONTAL, sashwidth=8, bg="#e0e0e0")
@@ -58,8 +56,15 @@ class AppWindow(ctk.CTk):
         # Step 1: Add a basic tk.Text widget to center pane
         self.text_editor = tk.Text(self.center_frame)
         self.text_editor.pack(fill="both", expand=True)
-        self.save_button = tk.Button(self.center_frame, text="Save", command=self.save_file_from_editor)
-        self.save_button.pack(fill="x")
+        # Load save icon for Save button
+        try:
+            save_icon_path = resource_path("assets/save.png")
+            self.save_icon = tk.PhotoImage(file=save_icon_path)
+        except Exception as e:
+            print(f"[DEBUG] Failed to load save icon: {e}")
+            self.save_icon = None
+        self.save_button = tk.Button(self.taskbar_frame, image=self.save_icon, command=self.save_file_from_editor)
+        self.save_button.pack(side="left", padx=4, pady=4)
         self.current_file_path = None
 
         # Menu bar setup
