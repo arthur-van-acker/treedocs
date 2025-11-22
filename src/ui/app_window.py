@@ -219,9 +219,44 @@ class AppWindow(ctk.CTk):
         import os
         self.current_folder = folder
         self.folder_label_var.set(f"Workspace: {os.path.basename(folder)}")
+        # Save expanded folder paths
+        expanded_paths = set()
+        def collect_expanded(item, path):
+            if self.folder_tree.item(item, 'open'):
+                expanded_paths.add(path)
+            for child in self.folder_tree.get_children(item):
+                child_name = self.folder_tree.item(child, 'text').strip()
+                child_path = os.path.join(path, child_name)
+                collect_expanded(child, child_path)
+        for item in self.folder_tree.get_children():
+            name = self.folder_tree.item(item, 'text').strip()
+            collect_expanded(item, os.path.join(folder, name))
         # Clear tree
         self.folder_tree.delete(*self.folder_tree.get_children())
-        self._insert_tree_items(folder, "", 0)
+        # Insert tree items and keep a mapping from path to item
+        self._path_to_item = {}
+        def insert_items(path, parent, level=0):
+            try:
+                items = sorted(os.listdir(path))
+                dirs = [item for item in items if os.path.isdir(os.path.join(path, item))]
+                files = [item for item in items if not os.path.isdir(os.path.join(path, item))]
+                indent = "    " * level
+                for d in dirs:
+                    abs_path = os.path.join(path, d)
+                    display_text = f"{indent}{d}"
+                    node_id = self.folder_tree.insert(parent, "end", text=display_text, image=self.folder_icon if self.folder_icon else "", open=False)
+                    self._path_to_item[abs_path] = node_id
+                    insert_items(abs_path, node_id, level + 1)
+                for f in files:
+                    display_text = f"{indent}{f}"
+                    self.folder_tree.insert(parent, "end", text=display_text, open=False)
+            except Exception as e:
+                print(f"Failed to list folder tree: {e}")
+        insert_items(folder, "", 0)
+        # Restore expanded state by path
+        for path, item in getattr(self, '_path_to_item', {}).items():
+            if path in expanded_paths:
+                self.folder_tree.item(item, open=True)
 
     def _insert_tree_items(self, path, parent, level=0):
         import os
