@@ -3,6 +3,7 @@ import tkinter as tk
 from tkinter import filedialog
 import os
 import json
+from ui.app_window import AppWindow
 
 class TreeDocsApp(ctk.CTk):
 	CONFIG_PATH = os.path.expanduser(r"C:\Users\Arthur\.treedocs\config.json")
@@ -76,157 +77,12 @@ class TreeDocsApp(ctk.CTk):
 		menubar.add_cascade(label="Settings")
 		menubar.add_cascade(label="Help")
 		self.config(menu=menubar)
-	def open_workspace(self):
-		folder_selected = filedialog.askdirectory(title="Select Workspace Folder")
-		if folder_selected:
-			self.save_workspace_to_config(folder_selected)
-			self.show_folder_contents(folder_selected)
 
-	def load_workspace_from_config(self):
-		try:
-			if os.path.exists(self.CONFIG_PATH):
-				with open(self.CONFIG_PATH, "r", encoding="utf-8") as f:
-					config = json.load(f)
-				folder = config.get("workspace_folder")
-				if folder and os.path.isdir(folder):
-					self.show_folder_contents(folder)
-		except Exception as e:
-			print(f"Failed to load workspace config: {e}")
-
-	def create_folder(self):
-		if self.current_folder:
-			folder_name = filedialog.asksaveasfilename(initialdir=self.current_folder, title="Create Folder", defaultextension="", filetypes=[("All Files", "*")])
-			if folder_name:
-				# Remove file extension if any, and create folder
-				folder_name = os.path.splitext(folder_name)[0]
-				try:
-					os.makedirs(folder_name, exist_ok=True)
-					self.show_folder_contents(self.current_folder)
-				except Exception as e:
-					print(f"Failed to create folder: {e}")
-
-	def save_workspace_to_config(self, folder):
-		try:
-			os.makedirs(os.path.dirname(self.CONFIG_PATH), exist_ok=True)
-			with open(self.CONFIG_PATH, "w", encoding="utf-8") as f:
-				json.dump({"workspace_folder": folder}, f)
-		except Exception as e:
-			print(f"Failed to save workspace config: {e}")
-
-	def show_folder_contents(self, folder):
-		self.current_folder = folder
-		self.folder_label_var.set(f"Workspace: {os.path.basename(folder)}")
-		# Save expansion state
-		open_nodes = set()
-		def collect_open(node):
-			if self.folder_tree.item(node, 'open'):
-				open_nodes.add(self.folder_tree.item(node, 'text').lstrip())
-			for child in self.folder_tree.get_children(node):
-				collect_open(child)
-		for node in self.folder_tree.get_children():
-			collect_open(node)
-		# Only update treeview items, do not re-pack or re-create widgets
-		self.folder_tree.delete(*self.folder_tree.get_children())
-		self._insert_tree_items(folder, "", 0)
-		# Restore expansion state
-		def restore_open(node):
-			text = self.folder_tree.item(node, 'text').lstrip()
-			if text in open_nodes:
-				self.folder_tree.item(node, open=True)
-			for child in self.folder_tree.get_children(node):
-				restore_open(child)
-		for node in self.folder_tree.get_children():
-			restore_open(node)
-
-	def _insert_tree_items(self, path, parent, level=0):
-		try:
-			items = sorted(os.listdir(path))
-			dirs = [item for item in items if os.path.isdir(os.path.join(path, item))]
-			files = [item for item in items if not os.path.isdir(os.path.join(path, item))]
-			indent = "    " * level
-			for d in dirs:
-				abs_path = os.path.join(path, d)
-				display_text = f"{indent}{d}"
-				node_id = self.folder_tree.insert(parent, "end", text=display_text, image=self.folder_icon if self.folder_icon else "", open=False)
-				self._insert_tree_items(abs_path, node_id, level + 1)
-			for f in files:
-				display_text = f"{indent}{f}"
-				self.folder_tree.insert(parent, "end", text=display_text, open=False)
-		except Exception as e:
-			print(f"Failed to list folder tree: {e}")
-
-	def show_left_context_menu(self, event):
-		if self.current_folder:
-			self.left_context_menu.tk_popup(event.x_root, event.y_root)
-
-	def show_tree_context_menu(self, event):
-		item_id = self.folder_tree.identify_row(event.y)
-		if item_id:
-			self.folder_tree.selection_set(item_id)
-			self.file_context_menu.tk_popup(event.x_root, event.y_root)
-		else:
-			self.left_context_menu.tk_popup(event.x_root, event.y_root)
-	def get_selected_file_path(self):
-		item_id = self.folder_tree.selection()[0]
-		parts = []
-		while item_id:
-			# Remove indentation from text
-			text = self.folder_tree.item(item_id, "text").lstrip()
-			parts.insert(0, text)
-			item_id = self.folder_tree.parent(item_id)
-		return os.path.join(self.current_folder, *parts) if parts else None
-
-	def rename_selected_file(self):
-		old_path = self.get_selected_file_path()
-		if old_path and os.path.exists(old_path):
-			import tkinter.simpledialog
-			# Create a custom Toplevel for the dialog to set icon
-			dialog = tk.Toplevel(self)
-			dialog.withdraw()
-			icon_path = os.path.join(os.path.dirname(__file__), "assets", "favicon.ico")
-			try:
-				dialog.iconbitmap(icon_path)
-			except Exception:
-				pass
-			new_name = tkinter.simpledialog.askstring("Rename", f"Rename '{os.path.basename(old_path)}' to:", initialvalue=os.path.basename(old_path), parent=dialog)
-			dialog.destroy()
-			if new_name:
-				new_path = os.path.join(os.path.dirname(old_path), new_name)
-				try:
-					os.rename(old_path, new_path)
-					self.show_folder_contents(self.current_folder)
-				except Exception as e:
-					print(f"Failed to rename: {e}")
-
-	def delete_selected_file(self):
-		path = self.get_selected_file_path()
-		if path and os.path.exists(path):
-			import shutil
-			try:
-				if os.path.isdir(path):
-					shutil.rmtree(path)
-				else:
-					os.remove(path)
-				self.show_folder_contents(self.current_folder)
-			except Exception as e:
-				print(f"Failed to delete: {e}")
-
-	def create_txt_file(self):
-		if self.current_folder:
-			filename = filedialog.asksaveasfilename(initialdir=self.current_folder, title="Create .txt file", defaultextension=".txt", filetypes=[("Text files", "*.txt")])
-			if filename:
-				with open(filename, "w", encoding="utf-8") as f:
-					f.write("")
-				self.show_folder_contents(self.current_folder)
-
-	def create_md_file(self):
-		if self.current_folder:
-			filename = filedialog.asksaveasfilename(initialdir=self.current_folder, title="Create .md file", defaultextension=".md", filetypes=[("Markdown files", "*.md")])
-			if filename:
-				with open(filename, "w", encoding="utf-8") as f:
-					f.write("")
-				self.show_folder_contents(self.current_folder)
+from ui.app_window import AppWindow
 
 if __name__ == "__main__":
-	app = TreeDocsApp()
-	app.mainloop()
+    app = AppWindow()
+    app.mainloop()
+
+
+
