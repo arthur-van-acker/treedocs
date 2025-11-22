@@ -1,13 +1,20 @@
 import customtkinter as ctk
 import tkinter as tk
 from tkinter import ttk
+import os
+import sys
+
+def resource_path(relative_path):
+    if hasattr(sys, '_MEIPASS'):
+        return os.path.join(sys._MEIPASS, relative_path)
+    return os.path.join(os.path.dirname(__file__), '..', relative_path)
 
 class AppWindow(ctk.CTk):
     def __init__(self):
         super().__init__()
         self.title("TreeDocs")
         self.geometry("2500x1250+10+10")
-        self.iconbitmap("src/assets/favicon.ico")
+        self.iconbitmap(resource_path("assets/favicon.ico"))
 
         # Load folder icon
         try:
