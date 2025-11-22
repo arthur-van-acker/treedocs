@@ -170,3 +170,6 @@ desktop.ini
 *.pid
 *.seed
 *.sqlite3
+
+
+test_customtkinter_minimal.txt

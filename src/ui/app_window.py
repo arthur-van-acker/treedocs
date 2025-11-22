@@ -1,9 +1,11 @@
+
 from logic.utils import resource_path
 import customtkinter as ctk
 import tkinter as tk
 from tkinter import ttk
 import os
 import sys
+from ui.menu_bar import MenuBar
 
 
 class AppWindow(ctk.CTk):
@@ -17,3 +19,6 @@ class AppWindow(ctk.CTk):
             self.iconbitmap(icon_path)
         except Exception as e:
             print(f"Failed to set window icon: {e}")
+
+        # Add menu bar
+        self.menu_bar = MenuBar(self)
