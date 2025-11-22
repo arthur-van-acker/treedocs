@@ -5,7 +5,7 @@ import tkinter as tk
 from tkinter import ttk
 import os
 import sys
-from ui.menu_bar import MenuBar
+from ui import MenuBar, ToolBar
 
 
 class AppWindow(ctk.CTk):
@@ -22,3 +22,7 @@ class AppWindow(ctk.CTk):
 
         # Add menu bar
         self.menu_bar = MenuBar(self)
+        # Add tool bar below menu bar
+        assets_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "assets"))
+        self.tool_bar = ToolBar(self, assets_path)
+        self.tool_bar.pack(side="top", fill="x")
