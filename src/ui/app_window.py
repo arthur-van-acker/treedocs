@@ -52,6 +52,9 @@ class AppWindow(ctk.CTk):
         # Step 1: Add a basic tk.Text widget to center pane
         self.text_editor = tk.Text(self.center_frame)
         self.text_editor.pack(fill="both", expand=True)
+        self.save_button = tk.Button(self.center_frame, text="Save", command=self.save_file_from_editor)
+        self.save_button.pack(fill="x")
+        self.current_file_path = None
 
         # Menu bar setup
         menubar = tk.Menu(self)
@@ -91,11 +94,24 @@ class AppWindow(ctk.CTk):
                 print(f"[DEBUG] Text editor widget: {self.text_editor}")
                 self.text_editor.delete('1.0', tk.END)
                 self.text_editor.insert(tk.END, content)
+                self.current_file_path = file_path
                 print(f"[DEBUG] Inserted content into text editor.")
             except Exception as e:
                 print(f"[DEBUG] Failed to load file: {e}")
         else:
             print("[DEBUG] Selected item is not a file.")
+
+    def save_file_from_editor(self):
+        if not self.current_file_path:
+            print("[DEBUG] No file loaded to save.")
+            return
+        try:
+            content = self.text_editor.get('1.0', tk.END)
+            with open(self.current_file_path, 'w', encoding='utf-8') as f:
+                f.write(content)
+            print(f"[DEBUG] Saved content to {self.current_file_path}")
+        except Exception as e:
+            print(f"[DEBUG] Failed to save file: {e}")
 
     def open_explorer_workspace(self):
         import subprocess
