@@ -65,6 +65,10 @@ class AppWindow(ctk.CTk):
         self.left_frame.bind("<Button-3>", self.show_left_context_menu)
 
         self.file_context_menu = tk.Menu(self.left_frame, tearoff=0)
+        self.file_context_menu.add_command(label="New .txt file", command=lambda: self.create_txt_file(in_selected_folder=True))
+        self.file_context_menu.add_command(label="New .md file", command=lambda: self.create_md_file(in_selected_folder=True))
+        self.file_context_menu.add_command(label="New folder", command=lambda: self.create_folder(in_selected_folder=True))
+        self.file_context_menu.add_separator()
         self.file_context_menu.add_command(label="Rename", command=self.rename_selected_file)
         self.file_context_menu.add_command(label="Delete", command=self.delete_selected_file)
         self.folder_tree.bind("<Button-3>", self.show_tree_context_menu)
@@ -93,25 +97,117 @@ class AppWindow(ctk.CTk):
         else:
             self.left_context_menu.tk_popup(event.x_root, event.y_root)
 
-    def create_txt_file(self):
-        # TODO: Implement using logic.file_ops
-        pass
+    def create_txt_file(self, in_selected_folder=False):
+        from logic.file_ops import FileOps
+        import tkinter.simpledialog
+        target_folder = self.current_folder
+        if in_selected_folder:
+            selected = self.folder_tree.selection()
+            if selected:
+                item = selected[0]
+                name = self.folder_tree.item(item, "text").strip()
+                path = os.path.join(self.current_folder, name)
+                if os.path.isdir(path):
+                    target_folder = path
+        if not target_folder:
+            return
+        filename = tkinter.simpledialog.askstring("New .txt file", "Enter file name:", parent=self)
+        if filename:
+            if not filename.endswith(".txt"):
+                filename += ".txt"
+            file_path = os.path.join(target_folder, filename)
+            try:
+                with open(file_path, "w", encoding="utf-8") as f:
+                    f.write("")
+                self.show_folder_contents(self.current_folder)
+            except Exception as e:
+                tk.messagebox.showerror("Error", f"Failed to create file: {e}")
 
-    def create_md_file(self):
-        # TODO: Implement using logic.file_ops
-        pass
+    def create_md_file(self, in_selected_folder=False):
+        from logic.file_ops import FileOps
+        import tkinter.simpledialog
+        target_folder = self.current_folder
+        if in_selected_folder:
+            selected = self.folder_tree.selection()
+            if selected:
+                item = selected[0]
+                name = self.folder_tree.item(item, "text").strip()
+                path = os.path.join(self.current_folder, name)
+                if os.path.isdir(path):
+                    target_folder = path
+        if not target_folder:
+            return
+        filename = tkinter.simpledialog.askstring("New .md file", "Enter file name:", parent=self)
+        if filename:
+            if not filename.endswith(".md"):
+                filename += ".md"
+            file_path = os.path.join(target_folder, filename)
+            try:
+                with open(file_path, "w", encoding="utf-8") as f:
+                    f.write("")
+                self.show_folder_contents(self.current_folder)
+            except Exception as e:
+                tk.messagebox.showerror("Error", f"Failed to create file: {e}")
 
-    def create_folder(self):
-        # TODO: Implement using logic.file_ops
-        pass
+    def create_folder(self, in_selected_folder=False):
+        from logic.file_ops import FileOps
+        import tkinter.simpledialog
+        target_folder = self.current_folder
+        if in_selected_folder:
+            selected = self.folder_tree.selection()
+            if selected:
+                item = selected[0]
+                name = self.folder_tree.item(item, "text").strip()
+                path = os.path.join(self.current_folder, name)
+                if os.path.isdir(path):
+                    target_folder = path
+        if not target_folder:
+            return
+        foldername = tkinter.simpledialog.askstring("New folder", "Enter folder name:", parent=self)
+        if foldername:
+            folder_path = os.path.join(target_folder, foldername)
+            if FileOps.create_folder(folder_path):
+                self.show_folder_contents(self.current_folder)
+            else:
+                tk.messagebox.showerror("Error", "Failed to create folder.")
 
     def rename_selected_file(self):
-        # TODO: Implement using logic.file_ops
-        pass
+        from logic.file_ops import FileOps
+        import tkinter.simpledialog
+        selected = self.folder_tree.selection()
+        if not selected:
+            return
+        item = selected[0]
+        old_name = self.folder_tree.item(item, "text").strip()
+        old_path = os.path.join(self.current_folder, old_name)
+        new_name = tkinter.simpledialog.askstring("Rename", f"Enter new name for '{old_name}':", parent=self)
+        if new_name and new_name != old_name:
+            new_path = os.path.join(self.current_folder, new_name)
+            try:
+                os.rename(old_path, new_path)
+                self.show_folder_contents(self.current_folder)
+            except Exception as e:
+                tk.messagebox.showerror("Error", f"Failed to rename: {e}")
 
     def delete_selected_file(self):
-        # TODO: Implement using logic.file_ops
-        pass
+        from logic.file_ops import FileOps
+        import shutil
+        selected = self.folder_tree.selection()
+        if not selected:
+            return
+        item = selected[0]
+        name = self.folder_tree.item(item, "text").strip()
+        path = os.path.join(self.current_folder, name)
+        confirm = tk.messagebox.askyesno("Delete", f"Are you sure you want to delete '{name}'?")
+        if confirm:
+            try:
+                if os.path.isdir(path):
+                    shutil.rmtree(path)
+                else:
+                    os.remove(path)
+                self.show_folder_contents(self.current_folder)
+            except Exception as e:
+                tk.messagebox.showerror("Error", f"Failed to delete: {e}")
 
     def load_workspace_from_config(self):
         from logic.workspace import WorkspaceConfig
