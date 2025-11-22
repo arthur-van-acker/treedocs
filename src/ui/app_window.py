@@ -149,7 +149,6 @@ class AppWindow(ctk.CTk):
             self.left_context_menu.tk_popup(event.x_root, event.y_root)
 
     def create_txt_file(self, in_selected_folder=False):
-        from logic.file_ops import FileOps
         import tkinter.simpledialog
         target_folder = self.current_folder
         if in_selected_folder:
