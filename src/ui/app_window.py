@@ -62,6 +62,8 @@ class AppWindow(ctk.CTk):
         self.left_context_menu.add_command(label="New .txt file", command=self.create_txt_file)
         self.left_context_menu.add_command(label="New .md file", command=self.create_md_file)
         self.left_context_menu.add_command(label="New folder", command=self.create_folder)
+        self.left_context_menu.add_separator()
+        self.left_context_menu.add_command(label="Open explorer", command=lambda: self.open_explorer_workspace())
         self.left_frame.bind("<Button-3>", self.show_left_context_menu)
 
         self.file_context_menu = tk.Menu(self.left_frame, tearoff=0)
@@ -69,9 +71,55 @@ class AppWindow(ctk.CTk):
         self.file_context_menu.add_command(label="New .md file", command=lambda: self.create_md_file(in_selected_folder=True))
         self.file_context_menu.add_command(label="New folder", command=lambda: self.create_folder(in_selected_folder=True))
         self.file_context_menu.add_separator()
+        self.file_context_menu.add_command(label="Open explorer", command=self.open_explorer_selected)
+        self.file_context_menu.add_separator()
         self.file_context_menu.add_command(label="Rename", command=self.rename_selected_file)
         self.file_context_menu.add_command(label="Delete", command=self.delete_selected_file)
         self.folder_tree.bind("<Button-3>", self.show_tree_context_menu)
+
+        # Load workspace on startup
+        self.load_workspace_from_config()
+    def open_explorer_workspace(self):
+        import subprocess
+        import platform
+        folder = getattr(self, 'current_folder', None)
+        # Normalize path for Windows
+        if folder and platform.system() == "Windows":
+            folder = os.path.normpath(folder)
+        print(f"[DEBUG] Open workspace explorer path: {folder}")  # Debug output
+        if folder and os.path.exists(folder):
+            if platform.system() == "Windows":
+                subprocess.Popen(f'explorer "{folder}"')
+            elif platform.system() == "Darwin":
+                subprocess.Popen(["open", folder])
+            else:
+                subprocess.Popen(["xdg-open", folder])
+        else:
+            tk.messagebox.showerror("Error", f"Workspace path does not exist: {folder}")
+
+    def open_explorer_selected(self):
+        import subprocess
+        import platform
+        selected = self.folder_tree.selection()
+        # Always fallback to workspace root if nothing is selected
+        target_path = self.current_folder
+        if selected:
+            item = selected[0]
+            if hasattr(self, '_item_to_path') and item in self._item_to_path:
+                target_path = self._item_to_path[item]
+        # Normalize path for Windows
+        if target_path and platform.system() == "Windows":
+            target_path = os.path.normpath(target_path)
+        print(f"[DEBUG] Open explorer path: {target_path}")  # Debug output
+        if target_path and os.path.exists(target_path):
+            if platform.system() == "Windows":
+                subprocess.Popen(f'explorer "{target_path}"')
+            elif platform.system() == "Darwin":
+                subprocess.Popen(["open", target_path])
+            else:
+                subprocess.Popen(["xdg-open", target_path])
+        else:
+            tk.messagebox.showerror("Error", f"Path does not exist: {target_path}")
 
         self.current_folder = None
         self.load_workspace_from_config()
@@ -233,8 +281,8 @@ class AppWindow(ctk.CTk):
             collect_expanded(item, os.path.join(folder, name))
         # Clear tree
         self.folder_tree.delete(*self.folder_tree.get_children())
-        # Insert tree items and keep a mapping from path to item
-        self._path_to_item = {}
+        # Insert tree items and keep a mapping from item to path
+        self._item_to_path = {}
         def insert_items(path, parent, level=0):
             try:
                 items = sorted(os.listdir(path))
@@ -245,16 +293,18 @@ class AppWindow(ctk.CTk):
                     abs_path = os.path.join(path, d)
                     display_text = f"{indent}{d}"
                     node_id = self.folder_tree.insert(parent, "end", text=display_text, image=self.folder_icon if self.folder_icon else "", open=False)
-                    self._path_to_item[abs_path] = node_id
+                    self._item_to_path[node_id] = abs_path
                     insert_items(abs_path, node_id, level + 1)
                 for f in files:
+                    abs_path = os.path.join(path, f)
                     display_text = f"{indent}{f}"
-                    self.folder_tree.insert(parent, "end", text=display_text, open=False)
+                    node_id = self.folder_tree.insert(parent, "end", text=display_text, open=False)
+                    self._item_to_path[node_id] = abs_path
             except Exception as e:
                 print(f"Failed to list folder tree: {e}")
         insert_items(folder, "", 0)
         # Restore expanded state by path
-        for path, item in getattr(self, '_path_to_item', {}).items():
+        for item, path in getattr(self, '_item_to_path', {}).items():
             if path in expanded_paths:
                 self.folder_tree.item(item, open=True)
 
