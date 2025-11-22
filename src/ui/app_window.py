@@ -1,5 +1,5 @@
 
-from logic.utils import resource_path
+from logic import resource_path
 import customtkinter as ctk
 import tkinter as tk
 from tkinter import ttk
