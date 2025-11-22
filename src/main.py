@@ -67,8 +67,6 @@ class TreeDocsApp(ctk.CTk):
 		self.paned_window.add(self.center_frame, minsize=100, width=1000)
 		self.paned_window.add(self.right_frame, minsize=100, width=1000)
 
-	# Removed - button handler
-
 		# Menu bar (move after UI setup)
 		menubar = tk.Menu(self)
 		file_menu = tk.Menu(menubar, tearoff=0)
