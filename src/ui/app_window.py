@@ -23,6 +23,12 @@ class AppWindow(ctk.CTk):
         except Exception:
             self.folder_icon = None
 
+        # Taskbar frame below menu bar
+        self.taskbar_frame = tk.Frame(self, bg="#e0e0e0")
+        self.taskbar_frame.pack(fill="x")
+        # Add placeholder to make taskbar visible
+        tk.Label(self.taskbar_frame, text="Taskbar", bg="#e0e0e0", font=("Segoe UI", 10, "bold")).pack(side="left", padx=10, pady=4)
+
         # PanedWindow for resizable panes
         self.paned_window = tk.PanedWindow(self, orient=tk.HORIZONTAL, sashwidth=8, bg="#e0e0e0")
         self.paned_window.pack(fill="both", expand=True)
