@@ -25,9 +25,14 @@ class TreeDocsApp(ctk.CTk):
 		self.folder_label_var = tk.StringVar()
 		self.folder_label = tk.Label(self.left_frame, textvariable=self.folder_label_var, bg="#f5f5f5", anchor="w", font=("Segoe UI", 12, "bold"))
 		self.folder_label.pack(fill="x", padx=10, pady=(10,0))
+		self.button_frame = tk.Frame(self.left_frame, bg="#f5f5f5")
+		self.button_frame.pack(fill="x", padx=10, pady=(2,0))
+		# + and - buttons removed, but button_frame remains for layout
 		from tkinter import ttk
 		self.folder_tree = ttk.Treeview(self.left_frame)
 		self.folder_tree.pack(fill="both", expand=True, padx=10, pady=(2,10))
+
+	
 
 		# Load folder icon
 		try:
@@ -62,6 +67,8 @@ class TreeDocsApp(ctk.CTk):
 		self.paned_window.add(self.center_frame, minsize=100, width=1000)
 		self.paned_window.add(self.right_frame, minsize=100, width=1000)
 
+	# Removed - button handler
+
 		# Menu bar (move after UI setup)
 		menubar = tk.Menu(self)
 		file_menu = tk.Menu(menubar, tearoff=0)
@@ -76,38 +83,6 @@ class TreeDocsApp(ctk.CTk):
 		if folder_selected:
 			self.save_workspace_to_config(folder_selected)
 			self.show_folder_contents(folder_selected)
-
-		# PanedWindow for resizable panes
-		self.paned_window = tk.PanedWindow(self, orient=tk.HORIZONTAL, sashwidth=8, bg="#e0e0e0")
-		self.paned_window.pack(fill="both", expand=True)
-
-		# Left pane for folder contents (min width 500px)
-		self.left_frame = ctk.CTkFrame(self.paned_window, fg_color="#f5f5f5")
-		self.left_frame.pack_propagate(False)
-		self.left_frame.configure(width=500)
-		self.paned_window.add(self.left_frame, minsize=500)
-		self.folder_label_var = tk.StringVar()
-		self.folder_label = tk.Label(self.left_frame, textvariable=self.folder_label_var, bg="#f5f5f5", anchor="w", font=("Segoe UI", 12, "bold"))
-		self.folder_label.pack(fill="x", padx=10, pady=(10,0))
-		self.folder_listbox = tk.Listbox(self.left_frame, bg="#f5f5f5", border=0)
-		self.folder_listbox.pack(fill="both", expand=True, padx=10, pady=(2,10))
-
-		# Context menu for creating files
-		self.left_context_menu = tk.Menu(self.left_frame, tearoff=0)
-		self.left_context_menu.add_command(label="New .txt file", command=self.create_txt_file)
-		self.left_context_menu.add_command(label="New .md file", command=self.create_md_file)
-		self.left_context_menu.add_command(label="New folder", command=self.create_folder)
-		self.left_frame.bind("<Button-3>", self.show_left_context_menu)
-		self.folder_listbox.bind("<Button-3>", self.show_left_context_menu)
-
-		self.current_folder = None
-		self.load_workspace_from_config()
-
-		# Center and right panes
-		self.center_frame = ctk.CTkFrame(self.paned_window, fg_color="#ffffff")
-		self.paned_window.add(self.center_frame)
-		self.right_frame = ctk.CTkFrame(self.paned_window, fg_color="#f5f5f5")
-		self.paned_window.add(self.right_frame)
 
 	def load_workspace_from_config(self):
 		try:
@@ -143,27 +118,41 @@ class TreeDocsApp(ctk.CTk):
 	def show_folder_contents(self, folder):
 		self.current_folder = folder
 		self.folder_label_var.set(f"Workspace: {os.path.basename(folder)}")
+		# Save expansion state
+		open_nodes = set()
+		def collect_open(node):
+			if self.folder_tree.item(node, 'open'):
+				open_nodes.add(self.folder_tree.item(node, 'text').lstrip())
+			for child in self.folder_tree.get_children(node):
+				collect_open(child)
+		for node in self.folder_tree.get_children():
+			collect_open(node)
+		# Only update treeview items, do not re-pack or re-create widgets
 		self.folder_tree.delete(*self.folder_tree.get_children())
-		self._insert_tree_items(folder, "")
+		self._insert_tree_items(folder, "", 0)
+		# Restore expansion state
+		def restore_open(node):
+			text = self.folder_tree.item(node, 'text').lstrip()
+			if text in open_nodes:
+				self.folder_tree.item(node, open=True)
+			for child in self.folder_tree.get_children(node):
+				restore_open(child)
+		for node in self.folder_tree.get_children():
+			restore_open(node)
 
-	def _insert_tree_items(self, path, parent, prefix=""):
+	def _insert_tree_items(self, path, parent, level=0):
 		try:
 			items = sorted(os.listdir(path))
 			dirs = [item for item in items if os.path.isdir(os.path.join(path, item))]
 			files = [item for item in items if not os.path.isdir(os.path.join(path, item))]
-			# Always show directories, even if empty
-			for idx, d in enumerate(dirs):
+			indent = "    " * level
+			for d in dirs:
 				abs_path = os.path.join(path, d)
-				# ASCII tree connection
-				connector = "├── " if idx < len(dirs) - 1 or files else "└── "
-				display_text = f"{prefix}{connector}{d}"
+				display_text = f"{indent}{d}"
 				node_id = self.folder_tree.insert(parent, "end", text=display_text, image=self.folder_icon if self.folder_icon else "", open=False)
-				# For children, add vertical bar if not last
-				child_prefix = prefix + ("│   " if idx < len(dirs) - 1 or files else "    ")
-				self._insert_tree_items(abs_path, node_id, child_prefix)
-			for f_idx, f in enumerate(files):
-				connector = "└── " if f_idx == len(files) - 1 else "├── "
-				display_text = f"{prefix}{connector}{f}"
+				self._insert_tree_items(abs_path, node_id, level + 1)
+			for f in files:
+				display_text = f"{indent}{f}"
 				self.folder_tree.insert(parent, "end", text=display_text, open=False)
 		except Exception as e:
 			print(f"Failed to list folder tree: {e}")
@@ -183,7 +172,9 @@ class TreeDocsApp(ctk.CTk):
 		item_id = self.folder_tree.selection()[0]
 		parts = []
 		while item_id:
-			parts.insert(0, self.folder_tree.item(item_id, "text"))
+			# Remove indentation from text
+			text = self.folder_tree.item(item_id, "text").lstrip()
+			parts.insert(0, text)
 			item_id = self.folder_tree.parent(item_id)
 		return os.path.join(self.current_folder, *parts) if parts else None
 
