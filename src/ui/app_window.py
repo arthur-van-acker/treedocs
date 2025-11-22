@@ -34,6 +34,8 @@ class AppWindow(ctk.CTk):
         # Workspace pane (left)
         self.workspace_pane = WorkspacePane(self.main_content)
         self.workspace_pane.pack(side="left", fill="y")
+        self.workspace_pane.configure(width=300)
+        self.workspace_pane.pack_propagate(False)
 
         # Editor pane (middle)
         self.editor_pane = EditorPane(self.main_content)
