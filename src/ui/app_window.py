@@ -47,6 +47,10 @@ class AppWindow(ctk.CTk):
         self.paned_window.add(self.center_frame, minsize=100, width=1000)
         self.paned_window.add(self.right_frame, minsize=100, width=1000)
 
+        # Step 1: Add a basic tk.Text widget to center pane
+        self.text_editor = tk.Text(self.center_frame)
+        self.text_editor.pack(fill="both", expand=True, padx=10, pady=10)
+
         # Menu bar setup
         menubar = tk.Menu(self)
         file_menu = tk.Menu(menubar, tearoff=0)
