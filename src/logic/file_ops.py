@@ -1,3 +1,8 @@
+def open_folder(path):
+    try:
+        os.startfile(path)
+    except Exception as e:
+        print(f"Failed to open folder: {e}")
 import os
 from dotenv import load_dotenv
 

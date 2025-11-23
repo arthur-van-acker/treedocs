@@ -2,7 +2,7 @@ from ui.tooltip import ToolTip
 import customtkinter as ctk
 from PIL import Image
 import os
-from logic import normalize_path
+from logic import open_relevant_folder
 
 class ToolBar(ctk.CTkFrame):
     def __init__(self, master, assets_path, **kwargs):
@@ -59,7 +59,7 @@ class ToolBar(ctk.CTkFrame):
             text="",
             width=32,
             height=32,
-            command=self._on_open_folder,
+            command=open_relevant_folder,
             fg_color="#e0e0e0",
             hover_color="white"
         )
@@ -74,33 +74,3 @@ class ToolBar(ctk.CTkFrame):
         # Placeholder for new file functionality
         print("New File button clicked")
 
-    def _on_open_folder(self):
-        # Try to get selected folder from WorkspacePane's treeview
-        try:
-            workspace_pane = getattr(self._app_window, 'workspace_pane', None)
-            if workspace_pane is not None:
-                tree = getattr(workspace_pane, 'tree', None)
-                if tree is not None:
-                    selected = tree.selection()
-                    if selected:
-                        node_id = selected[0]
-                        # Get actual path from node values
-                        values = tree.item(node_id, 'values')
-                        if values and len(values) > 0:
-                            folder_path = normalize_path(values[0])
-                            if os.path.isdir(folder_path):
-                                os.startfile(folder_path)
-                                return
-        except Exception as e:
-            print(f"Failed to open selected folder: {e}")
-        # Fallback: open workspace folder
-        try:
-            from logic.workspace import WorkspaceConfig
-            folder = WorkspaceConfig.load()
-            folder = normalize_path(folder) if folder else folder
-            if folder and os.path.isdir(folder):
-                os.startfile(folder)
-            else:
-                print("No valid workspace folder found.")
-        except Exception as e:
-            print(f"Failed to open workspace folder: {e}")

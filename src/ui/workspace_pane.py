@@ -18,6 +18,25 @@ class WorkspacePane(ctk.CTkFrame):
         else:
             self.tree.insert("", "end", text="No workspace folder found")
 
+        # Bind selection event to store last selected folder
+        self.tree.bind('<<TreeviewSelect>>', self._on_tree_select)
+
+    def _on_tree_select(self, event):
+        from logic.workspace import set_last_selected_folder
+        selected = self.tree.selection()
+        if selected:
+            node_id = selected[0]
+            item_text = self.tree.item(node_id, 'text')
+            # If workspace root is selected, reset last selected folder
+            if item_text.startswith('Workspace:'):
+                set_last_selected_folder(None)
+            else:
+                values = self.tree.item(node_id, 'values')
+                if values and len(values) > 0:
+                    path = values[0]
+                    if os.path.isdir(path):
+                        set_last_selected_folder(path)
+
     def _populate_tree(self, folder, parent="", prefix=""):
         try:
             entries = os.listdir(folder)

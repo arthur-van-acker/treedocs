@@ -1,3 +1,11 @@
+_last_selected_folder = None
+
+def set_last_selected_folder(path):
+    global _last_selected_folder
+    _last_selected_folder = path
+
+def get_last_selected_folder():
+    return _last_selected_folder
 import os
 import json
 
