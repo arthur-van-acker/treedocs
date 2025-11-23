@@ -1,4 +1,4 @@
-from ui import ToolTip
+from ui.tooltip import ToolTip
 import customtkinter as ctk
 from PIL import Image
 import os
