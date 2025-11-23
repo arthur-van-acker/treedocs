@@ -9,7 +9,8 @@ class AppWindow(ctk.CTk):
     def __init__(self):
         super().__init__()
         self.title("TreeDocs")
-        self.geometry("2500x1250+10+10")
+        self.geometry("1900x1250")
+        self.resizable(False, False)
         # Set favicon (window icon)
         icon_path = resource_path("assets/favicon.ico")
         try:
@@ -36,8 +37,12 @@ class AppWindow(ctk.CTk):
 
         # Editor pane (middle)
         self.editor_pane = EditorPane(self.main_content)
-        self.editor_pane.pack(side="left", fill="both", expand=True)
+        self.editor_pane.pack(side="left", fill="y")
+        self.editor_pane.configure(width=800)
+        self.editor_pane.pack_propagate(False)
 
         # Preview pane (right)
         self.preview_pane = PreviewPane(self.main_content)
         self.preview_pane.pack(side="left", fill="y")
+        self.preview_pane.configure(width=800)
+        self.preview_pane.pack_propagate(False)
