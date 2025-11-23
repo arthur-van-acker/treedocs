@@ -2,6 +2,7 @@ import tkinter as tk
 
 class MenuBar:
     def __init__(self, parent):
+        self.parent = parent
         menubar = tk.Menu(parent)
 
         file_menu = tk.Menu(menubar, tearoff=0)
@@ -27,13 +28,14 @@ class MenuBar:
         workspaces_menu.add_command(label="Close Workspace")
         menubar.add_cascade(label="Workspaces", menu=workspaces_menu)
 
-        view_menu = tk.Menu(menubar, tearoff=0)
-        view_menu.add_command(label="Zoom In")
-        view_menu.add_command(label="Zoom Out")
-        menubar.add_cascade(label="View", menu=view_menu)
-        view_menu.add_separator()
-        view_menu.add_checkbutton(label="Editor Pane", variable=parent.editor_pane_var, command=parent.toggle_editor_pane)
-        view_menu.add_checkbutton(label="Preview Pane", variable=parent.preview_pane_var, command=parent.toggle_preview_pane)
+        self.view_menu = tk.Menu(menubar, tearoff=0)
+        # Zoom actions will be set via set_zoom_handlers
+        self.view_menu.add_command(label="Zoom In", command=None)
+        self.view_menu.add_command(label="Zoom Out", command=None)
+        menubar.add_cascade(label="View", menu=self.view_menu)
+        self.view_menu.add_separator()
+        self.view_menu.add_checkbutton(label="Editor Pane", variable=parent.editor_pane_var, command=parent.toggle_editor_pane)
+        self.view_menu.add_checkbutton(label="Preview Pane", variable=parent.preview_pane_var, command=parent.toggle_preview_pane)
 
         help_menu = tk.Menu(menubar, tearoff=0)
         help_menu.add_command(label="Help Topics")
@@ -41,3 +43,8 @@ class MenuBar:
         menubar.add_cascade(label="Help", menu=help_menu)
 
         parent.config(menu=menubar)
+
+    def set_zoom_handlers(self, zoom_in_func, zoom_out_func):
+        # Set the commands for Zoom In/Out menu items
+        self.view_menu.entryconfig("Zoom In", command=zoom_in_func)
+        self.view_menu.entryconfig("Zoom Out", command=zoom_out_func)

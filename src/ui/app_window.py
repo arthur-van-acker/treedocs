@@ -7,6 +7,9 @@ from ui import MenuBar, ToolBar, WorkspacePane, EditorPane, PreviewPane
 
 
 class AppWindow(ctk.CTk):
+    def open_file_in_editor(self, file_path):
+        if hasattr(self.editor_pane, 'load_file'):
+            self.editor_pane.load_file(file_path)
     # ...existing code...
     def __init__(self):
         super().__init__()
@@ -16,6 +19,8 @@ class AppWindow(ctk.CTk):
         # Variables to track pane visibility
         self.editor_pane_var = tk.BooleanVar(value=True)
         self.preview_pane_var = tk.BooleanVar(value=True)
+        # Font size state for panes
+        self.pane_font_size = 12
         # Set favicon (window icon)
         icon_path = resource_path("assets/favicon.ico")
         try:
@@ -52,6 +57,22 @@ class AppWindow(ctk.CTk):
 
         # Add menu bar (after panes are created)
         self.menu_bar = MenuBar(self)
+        # Connect zoom actions
+        self.menu_bar.set_zoom_handlers(self.zoom_in, self.zoom_out)
+    def set_pane_font_size(self, size):
+        size = max(8, min(24, size))
+        self.pane_font_size = size
+        # Update EditorPane font
+        if hasattr(self.editor_pane, 'label'):
+            self.editor_pane.label.configure(font=("Consolas", size))
+        # Update PreviewPane font
+        if hasattr(self.preview_pane, 'label'):
+            self.preview_pane.label.configure(font=("Consolas", size))
+    def zoom_in(self):
+        self.set_pane_font_size(self.pane_font_size + 2)
+
+    def zoom_out(self):
+        self.set_pane_font_size(self.pane_font_size - 2)
 
     def toggle_editor_pane(self):
         if self.editor_pane_var.get():
