@@ -26,7 +26,7 @@ def populate_tree(tree, folder, parent="", prefix=""):
             display_text = ascii_prefix + ("[" + entry + "]" if os.path.isdir(path) else entry)
             node = tree.insert(parent, "end", text=display_text, values=(path,), open=False)
             if os.path.isdir(path):
-                new_prefix = prefix + ("    " if is_last else "│   ")
+                new_prefix = prefix + ("  " if is_last else "│ ")
                 populate_tree(tree, path, node, new_prefix)
     except Exception as e:
         tree.insert(parent, "end", text=f"Error: {e}")
