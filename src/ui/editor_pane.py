@@ -1,6 +1,21 @@
 import customtkinter as ctk
 
 class EditorPane(ctk.CTkFrame):
+    def save_file(self):
+        # Save the currently loaded file
+        file_path = None
+        label_text = self.label.cget("text")
+        if label_text.startswith("Editor Pane - "):
+            file_path = label_text[len("Editor Pane - "):]
+        if file_path:
+            try:
+                content = self.text_widget.get("1.0", "end-1c")
+                with open(file_path, 'w', encoding='utf-8') as f:
+                    f.write(content)
+            except Exception as e:
+                # Optionally show error
+                pass
+
     def __init__(self, master, **kwargs):
         super().__init__(master, width=800, **kwargs)
         self.inner_frame = ctk.CTkFrame(self, fg_color="white", border_width=1, border_color="black")

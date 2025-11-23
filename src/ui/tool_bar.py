@@ -1,5 +1,5 @@
 from ui.tooltip import ToolTip
-from ui_events.toolbar import on_save, on_new_file
+from ui_events import on_save, on_new_file
 import customtkinter as ctk
 from PIL import Image
 import os
@@ -24,7 +24,7 @@ class ToolBar(ctk.CTkFrame):
             text="",
             width=32,
             height=32,
-            command=on_save,
+            command=lambda: on_save(self._app_window),
             fg_color="#e0e0e0",  # light grey
             hover_color="white"  # white
         )

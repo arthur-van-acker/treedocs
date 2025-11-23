@@ -4,12 +4,17 @@ import customtkinter as ctk
 import os
 import tkinter as tk
 from ui import MenuBar, ToolBar, WorkspacePane, EditorPane, PreviewPane
+from ui_events import on_save
 
 
 class AppWindow(ctk.CTk):
+    def save_file_in_editor(self):
+        on_save(self)
+
     def open_file_in_editor(self, file_path):
         if hasattr(self.editor_pane, 'load_file'):
             self.editor_pane.load_file(file_path)
+
     # ...existing code...
     def __init__(self):
         super().__init__()

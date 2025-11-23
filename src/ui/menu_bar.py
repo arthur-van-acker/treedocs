@@ -1,4 +1,5 @@
 import tkinter as tk
+from ui_events import on_save
 
 class MenuBar:
     def __init__(self, parent):
@@ -8,7 +9,7 @@ class MenuBar:
         file_menu = tk.Menu(menubar, tearoff=0)
         file_menu.add_command(label="New")
         file_menu.add_command(label="Open...")
-        file_menu.add_command(label="Save")
+        file_menu.add_command(label="Save", command=lambda: on_save(parent))
         file_menu.add_separator()
         file_menu.add_command(label="Exit", command=parent.quit)
         menubar.add_cascade(label="File", menu=file_menu)
