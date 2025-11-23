@@ -1,6 +1,7 @@
 import customtkinter as ctk
 from tkinter import ttk
 from logic import WorkspaceConfig
+from ui_events.workspace_pane import on_tree_select, populate_tree
 import os
 
 class WorkspacePane(ctk.CTkFrame):
@@ -14,42 +15,9 @@ class WorkspacePane(ctk.CTkFrame):
             root_node = self.tree.insert("", "end", text=f"Workspace: {workspace_name}", open=True)
             self.tree.tag_configure('workspace_bold', font=('TkDefaultFont', 10, 'bold'))
             self.tree.item(root_node, tags=('workspace_bold',))
-            self._populate_tree(folder, root_node)
+            populate_tree(self.tree, folder, root_node)
         else:
             self.tree.insert("", "end", text="No workspace folder found")
 
         # Bind selection event to store last selected folder
-        self.tree.bind('<<TreeviewSelect>>', self._on_tree_select)
-
-    def _on_tree_select(self, event):
-        from logic.workspace import set_last_selected_folder
-        selected = self.tree.selection()
-        if selected:
-            node_id = selected[0]
-            item_text = self.tree.item(node_id, 'text')
-            # If workspace root is selected, reset last selected folder
-            if item_text.startswith('Workspace:'):
-                set_last_selected_folder(None)
-            else:
-                values = self.tree.item(node_id, 'values')
-                if values and len(values) > 0:
-                    path = values[0]
-                    if os.path.isdir(path):
-                        set_last_selected_folder(path)
-
-    def _populate_tree(self, folder, parent="", prefix=""):
-        try:
-            entries = os.listdir(folder)
-            entries.sort()
-            for i, entry in enumerate(entries):
-                path = os.path.join(folder, entry)
-                is_last = (i == len(entries) - 1)
-                ascii_prefix = prefix + ("└ " if is_last else "├ ")
-                display_text = ascii_prefix + ("[" + entry + "]" if os.path.isdir(path) else entry)
-                # Store actual path in 'values'
-                node = self.tree.insert(parent, "end", text=display_text, values=(path,), open=False)
-                if os.path.isdir(path):
-                    new_prefix = prefix + ("    " if is_last else "│   ")
-                    self._populate_tree(path, node, new_prefix)
-        except Exception as e:
-            self.tree.insert(parent, "end", text=f"Error: {e}")
+        self.tree.bind('<<TreeviewSelect>>', lambda _event: on_tree_select(self.tree))
