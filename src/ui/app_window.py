@@ -1,10 +1,7 @@
 
 from logic import resource_path
 import customtkinter as ctk
-import tkinter as tk
-from tkinter import ttk
 import os
-import sys
 from ui import MenuBar, ToolBar, WorkspacePane, EditorPane, PreviewPane
 
 

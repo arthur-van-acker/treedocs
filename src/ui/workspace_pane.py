@@ -1,5 +1,4 @@
 import customtkinter as ctk
-import tkinter as tk
 from tkinter import ttk
 from logic import WorkspaceConfig
 import os
@@ -28,7 +27,8 @@ class WorkspacePane(ctk.CTkFrame):
                 is_last = (i == len(entries) - 1)
                 ascii_prefix = prefix + ("└ " if is_last else "├ ")
                 display_text = ascii_prefix + ("[" + entry + "]" if os.path.isdir(path) else entry)
-                node = self.tree.insert(parent, "end", text=display_text, open=False)
+                # Store actual path in 'values'
+                node = self.tree.insert(parent, "end", text=display_text, values=(path,), open=False)
                 if os.path.isdir(path):
                     new_prefix = prefix + ("    " if is_last else "│   ")
                     self._populate_tree(path, node, new_prefix)

@@ -1,37 +1,14 @@
-class ToolTip:
-    def __init__(self, widget, text):
-        self.widget = widget
-        self.text = text
-        self.tipwindow = None
-        widget.bind("<Enter>", self.show_tip)
-        widget.bind("<Leave>", self.hide_tip)
-
-    def show_tip(self, event=None):
-        if self.tipwindow or not self.text:
-            return
-        x, y, _, _ = self.widget.bbox("insert") if hasattr(self.widget, "bbox") else (0, 0, 0, 0)
-        x = x + self.widget.winfo_rootx() + 40
-        y = y + self.widget.winfo_rooty() + 10
-        self.tipwindow = tw = tk.Toplevel(self.widget)
-        tw.wm_overrideredirect(True)
-        tw.wm_geometry(f"+{x}+{y}")
-        label = tk.Label(tw, text=self.text, background="#ffffe0", relief="solid", borderwidth=1, font=("tahoma", "8", "normal"))
-        label.pack(ipadx=4)
-
-    def hide_tip(self, event=None):
-        tw = self.tipwindow
-        self.tipwindow = None
-        if tw:
-            tw.destroy()
+from ui import ToolTip
 import customtkinter as ctk
 from PIL import Image
 import os
-import tkinter as tk
+from logic import normalize_path
 
 class ToolBar(ctk.CTkFrame):
     def __init__(self, master, assets_path, **kwargs):
         super().__init__(master, **kwargs)
         self.assets_path = assets_path
+        self._app_window = master.master if hasattr(master, 'master') else master  # Get AppWindow instance
         self._create_widgets()
 
     def _create_widgets(self):
@@ -98,5 +75,32 @@ class ToolBar(ctk.CTkFrame):
         print("New File button clicked")
 
     def _on_open_folder(self):
-        # Placeholder for open folder functionality
-        print("Open Folder button clicked")
+        # Try to get selected folder from WorkspacePane's treeview
+        try:
+            workspace_pane = getattr(self._app_window, 'workspace_pane', None)
+            if workspace_pane is not None:
+                tree = getattr(workspace_pane, 'tree', None)
+                if tree is not None:
+                    selected = tree.selection()
+                    if selected:
+                        node_id = selected[0]
+                        # Get actual path from node values
+                        values = tree.item(node_id, 'values')
+                        if values and len(values) > 0:
+                            folder_path = normalize_path(values[0])
+                            if os.path.isdir(folder_path):
+                                os.startfile(folder_path)
+                                return
+        except Exception as e:
+            print(f"Failed to open selected folder: {e}")
+        # Fallback: open workspace folder
+        try:
+            from logic.workspace import WorkspaceConfig
+            folder = WorkspaceConfig.load()
+            folder = normalize_path(folder) if folder else folder
+            if folder and os.path.isdir(folder):
+                os.startfile(folder)
+            else:
+                print("No valid workspace folder found.")
+        except Exception as e:
+            print(f"Failed to open workspace folder: {e}")
