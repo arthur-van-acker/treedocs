@@ -1,0 +1,26 @@
+# GitHub Copilot configuration for Python-only project
+suggestion:
+  advanced: true # enable advanced suggestions
+  multiline: true # allow multiline completions
+  max_length: 200 # max tokens per suggestion
+  auto_trigger: true # automatically show suggestions
+  include_docstrings: true # include docstrings in completions
+  include_type_hints: true # include type hints when possible
+
+file_types:
+- "*.py"
+
+exclude:
+- "*.md" # don't suggest for markdown files
+- "*.txt" # don't suggest for plain text
+
+style:
+  indentation: 4 # 4 spaces per level
+  quote_style: single # use single quotes
+  line_length: 100 # max 100 characters per line
+  follow_pep8: true # enforce PEP8 formatting
+
+behavior:
+  prefer_readability: true # prefer readable code over clever shortcuts
+  prefer_modularity: true # prefer modular functions and classes
+  prefer_explicit: true # prefer explicit code over implicit
