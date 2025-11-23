@@ -6,7 +6,7 @@ class EditorPane(ctk.CTkFrame):
         file_path = None
         label_text = self.label.cget("text")
         if label_text.startswith("Editor Pane - "):
-            file_path = label_text[len("Editor Pane - "):]
+            file_path = label_text[len("Editor - "):]
         if file_path:
             try:
                 content = self.text_widget.get("1.0", "end-1c")
@@ -20,7 +20,7 @@ class EditorPane(ctk.CTkFrame):
         super().__init__(master, width=800, **kwargs)
         self.inner_frame = ctk.CTkFrame(self, fg_color="white", border_width=1, border_color="black")
         self.inner_frame.pack(fill="both", expand=True, padx=5, pady=5)
-        self.label = ctk.CTkLabel(self.inner_frame, text="Editor Pane", font=("Consolas", 12))
+        self.label = ctk.CTkLabel(self.inner_frame, text="Editor", font=("Consolas", 12))
         self.label.pack(padx=10, pady=10)
         # Add a text widget for editing
         self.text_widget = ctk.CTkTextbox(self.inner_frame, font=("Consolas", 12), width=780, height=600)

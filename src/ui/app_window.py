@@ -70,6 +70,8 @@ class AppWindow(ctk.CTk):
         # Update EditorPane font
         if hasattr(self.editor_pane, 'label'):
             self.editor_pane.label.configure(font=("Consolas", size))
+        if hasattr(self.editor_pane, 'text_widget'):
+            self.editor_pane.text_widget.configure(font=("Consolas", size))
         # Update PreviewPane font
         if hasattr(self.preview_pane, 'label'):
             self.preview_pane.label.configure(font=("Consolas", size))
