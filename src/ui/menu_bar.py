@@ -22,7 +22,8 @@ class MenuBar:
         menubar.add_cascade(label="Edit", menu=edit_menu)
 
         workspaces_menu = tk.Menu(menubar, tearoff=0)
-        workspaces_menu.add_command(label="Open Workspace...")
+        from ui_events.app_window import open_workspace
+        workspaces_menu.add_command(label="Open Workspace...", command=lambda: open_workspace(parent))
         workspaces_menu.add_command(label="Close Workspace")
         menubar.add_cascade(label="Workspaces", menu=workspaces_menu)
 

@@ -7,6 +7,7 @@ from ui import MenuBar, ToolBar, WorkspacePane, EditorPane, PreviewPane
 
 
 class AppWindow(ctk.CTk):
+    # ...existing code...
     def __init__(self):
         super().__init__()
         self.title("TreeDocs")
