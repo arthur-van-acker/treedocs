@@ -30,6 +30,9 @@ class MenuBar:
         view_menu.add_command(label="Zoom In")
         view_menu.add_command(label="Zoom Out")
         menubar.add_cascade(label="View", menu=view_menu)
+        view_menu.add_separator()
+        view_menu.add_checkbutton(label="Editor Pane", variable=parent.editor_pane_var, command=parent.toggle_editor_pane)
+        view_menu.add_checkbutton(label="Preview Pane", variable=parent.preview_pane_var, command=parent.toggle_preview_pane)
 
         help_menu = tk.Menu(menubar, tearoff=0)
         help_menu.add_command(label="Help Topics")
