@@ -1,4 +1,5 @@
 from ui.tooltip import ToolTip
+from ui_events.toolbar import on_save, on_new_file
 import customtkinter as ctk
 from PIL import Image
 import os
@@ -23,7 +24,7 @@ class ToolBar(ctk.CTkFrame):
             text="",
             width=32,
             height=32,
-            command=self._on_save,
+            command=on_save,
             fg_color="#e0e0e0",  # light grey
             hover_color="white"  # white
         )
@@ -41,7 +42,7 @@ class ToolBar(ctk.CTkFrame):
             text="",
             width=32,
             height=32,
-            command=self._on_new_file,
+            command=on_new_file,
             fg_color="#e0e0e0",
             hover_color="white"
         )
@@ -66,11 +67,5 @@ class ToolBar(ctk.CTkFrame):
         self.open_folder_btn.pack(side="left", padx=4, pady=2)
         ToolTip(self.open_folder_btn, "Open Folder")
 
-    def _on_save(self):
-        # Placeholder for save functionality
-        print("Save button clicked")
-
-    def _on_new_file(self):
-        # Placeholder for new file functionality
-        print("New File button clicked")
+    # ...existing code...
 
