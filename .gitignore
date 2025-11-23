@@ -171,5 +171,5 @@ desktop.ini
 *.seed
 *.sqlite3
 
-
-test_customtkinter_minimal.txt
+# TreeDocs specific
+todo.md
