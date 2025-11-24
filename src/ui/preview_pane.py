@@ -4,11 +4,18 @@ class PreviewPane(ctk.CTkFrame):
     def __init__(self, master, **kwargs):
         super().__init__(master, width=800, **kwargs)
         # Add a white background frame with padding
-        self.inner_frame = ctk.CTkFrame(self, fg_color='white', border_width=1, border_color='black')
+        self.inner_frame = ctk.CTkFrame(self, fg_color='#f6f8fa', border_width=1, border_color='#d0d7de')
         self.inner_frame.pack(fill='both', expand=True, padx=5, pady=5)
         # Add preview-specific widgets to inner_frame
-        self.label = ctk.CTkLabel(self.inner_frame, text='Preview', font=('Consolas', 12))
-        self.label.pack(padx=10, pady=10)
+        self.label = ctk.CTkLabel(
+            self.inner_frame,
+            text='Preview',
+            font=('Consolas', 13, 'bold'),
+            text_color='#24292f',
+            fg_color='#f6f8fa',
+            anchor='w'
+        )
+        self.label.pack(fill='x', padx=10, pady=(10, 0))
 
     def load_file_content(self, file_path: str) -> None:
         '''
@@ -28,8 +35,17 @@ class PreviewPane(ctk.CTkFrame):
                 self.preview_widget.destroy()
             import customtkinter as ctk
             if ext == '.txt':
-                # Display plain text in a read-only textbox
-                self.preview_widget = ctk.CTkTextbox(self.inner_frame, font=('Consolas', 12), width=780, height=600)
+                # Display plain text in a read-only textbox, styled for readability
+                self.preview_widget = ctk.CTkTextbox(
+                    self.inner_frame,
+                    font=('Consolas', 12),
+                    width=780,
+                    height=600,
+                    fg_color='#f6f8fa',
+                    text_color='#24292f',
+                    border_color='#d0d7de',
+                    border_width=1
+                )
                 self.preview_widget.insert('1.0', content)
                 self.preview_widget.configure(state='disabled')
                 self.preview_widget.bind('<Key>', lambda e: 'break')
@@ -46,8 +62,8 @@ class PreviewPane(ctk.CTkFrame):
                     from tkinterhtml import HtmlFrame
                     if hasattr(self, 'preview_widget'):
                         self.preview_widget.destroy()
-                    # Create HtmlFrame for HTML rendering
-                    self.preview_widget = HtmlFrame(self.inner_frame, horizontal_scrollbar='auto')
+                    # Create HtmlFrame for HTML rendering, styled for GitHub-like appearance
+                    self.preview_widget = HtmlFrame(self.inner_frame, horizontal_scrollbar='auto', background='#f6f8fa')
                     self.preview_widget.set_content(html)
                     self.preview_widget.pack(fill='both', expand=True, padx=10, pady=10)
                     # Make HtmlFrame strictly read-only (disable selection and editing)
@@ -55,15 +71,33 @@ class PreviewPane(ctk.CTkFrame):
                     self.preview_widget.bind('<Button-3>', lambda e: 'break')
                 except ImportError:
                     # Fallback: show HTML as text if tkinterhtml is not installed
-                    self.preview_widget = ctk.CTkTextbox(self.inner_frame, font=('Consolas', 12), width=780, height=600)
+                    self.preview_widget = ctk.CTkTextbox(
+                        self.inner_frame,
+                        font=('Consolas', 12),
+                        width=780,
+                        height=600,
+                        fg_color='#f6f8fa',
+                        text_color='#24292f',
+                        border_color='#d0d7de',
+                        border_width=1
+                    )
                     self.preview_widget.insert('1.0', html)
                     self.preview_widget.configure(state='disabled')
                     self.preview_widget.bind('<Key>', lambda e: 'break')
                     self.preview_widget.pack(fill='both', expand=True, padx=10, pady=10)
             else:
-                # Display a message for unsupported file types
+                # Display a message for unsupported file types, styled for readability
                 msg = f'Preview not available for this file type: {ext}'
-                self.preview_widget = ctk.CTkTextbox(self.inner_frame, font=('Consolas', 12), width=780, height=100)
+                self.preview_widget = ctk.CTkTextbox(
+                    self.inner_frame,
+                    font=('Consolas', 12, 'italic'),
+                    width=780,
+                    height=100,
+                    fg_color='#f6f8fa',
+                    text_color='#6e7781',
+                    border_color='#d0d7de',
+                    border_width=1
+                )
                 self.preview_widget.insert('1.0', msg)
                 self.preview_widget.configure(state='disabled')
                 self.preview_widget.bind('<Key>', lambda e: 'break')
