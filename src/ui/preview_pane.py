@@ -40,13 +40,21 @@ class PreviewPane(ctk.CTkFrame):
                     html = markdown2.markdown(content, extras=['fenced-code-blocks', 'tables', 'strike', 'task_list', 'cuddled-lists', 'metadata', 'code-friendly', 'footnotes', 'header-ids', 'toc', 'github-markdown-css'])
                 except ImportError:
                     html = '<b>Error:</b> markdown2 is not installed.'
-                # Store HTML for next step (rendering)
-                self._last_html = html
-                # Temporary: show HTML as text until rendering is implemented
-                self.preview_widget = ctk.CTkTextbox(self.inner_frame, font=('Consolas', 12), width=780, height=600)
-                self.preview_widget.insert('1.0', html)
-                self.preview_widget.configure(state='disabled')
-                self.preview_widget.pack(fill='both', expand=True, padx=10, pady=10)
+                # Render HTML in the preview pane using tkinterhtml
+                try:
+                    from tkinterhtml import HtmlFrame
+                    if hasattr(self, 'preview_widget'):
+                        self.preview_widget.destroy()
+                    # Create HtmlFrame for HTML rendering
+                    self.preview_widget = HtmlFrame(self.inner_frame, horizontal_scrollbar='auto')
+                    self.preview_widget.set_content(html)
+                    self.preview_widget.pack(fill='both', expand=True, padx=10, pady=10)
+                except ImportError:
+                    # Fallback: show HTML as text if tkinterhtml is not installed
+                    self.preview_widget = ctk.CTkTextbox(self.inner_frame, font=('Consolas', 12), width=780, height=600)
+                    self.preview_widget.insert('1.0', html)
+                    self.preview_widget.configure(state='disabled')
+                    self.preview_widget.pack(fill='both', expand=True, padx=10, pady=10)
             else:
                 # Fallback for other types
                 self.preview_widget = ctk.CTkTextbox(self.inner_frame, font=('Consolas', 12), width=780, height=600)
