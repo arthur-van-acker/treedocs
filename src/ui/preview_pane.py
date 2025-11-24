@@ -62,8 +62,8 @@ class PreviewPane(ctk.CTkFrame):
                     from tkinterhtml import HtmlFrame
                     if hasattr(self, 'preview_widget'):
                         self.preview_widget.destroy()
-                    # Create HtmlFrame for HTML rendering, styled for GitHub-like appearance
-                    self.preview_widget = HtmlFrame(self.inner_frame, horizontal_scrollbar='auto', background='#f6f8fa')
+                    # Create HtmlFrame for HTML rendering (remove unsupported background option)
+                    self.preview_widget = HtmlFrame(self.inner_frame, horizontal_scrollbar='auto')
                     self.preview_widget.set_content(html)
                     self.preview_widget.pack(fill='both', expand=True, padx=10, pady=10)
                     # Make HtmlFrame strictly read-only (disable selection and editing)
