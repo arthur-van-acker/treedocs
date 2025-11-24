@@ -28,9 +28,15 @@ class WorkspacePane(ctk.CTkFrame):
                 if values and len(values) > 0:
                     path = values[0]
                     import os
+                    app = self.winfo_toplevel()
                     if os.path.isfile(path):
-                        # Find the AppWindow instance and call open_file_in_editor
-                        app = self.winfo_toplevel()
+                        # Call editor pane for editing
                         if hasattr(app, 'open_file_in_editor'):
                             app.open_file_in_editor(path)
+                        # Call preview pane for supported files (.txt, .md)
+                        ext = os.path.splitext(path)[1].lower()
+                        if ext in ['.txt', '.md'] and hasattr(app, 'preview_pane'):
+                            preview_pane = getattr(app, 'preview_pane', None)
+                            if hasattr(preview_pane, 'load_file_content'):
+                                preview_pane.load_file_content(path)
         self.tree.bind('<<TreeviewSelect>>', on_select)
