@@ -21,22 +21,50 @@ class WorkspacePane(ctk.CTkFrame):
 
         # Bind selection event to open file in editor if file is selected
         def on_select(_event):
-            selected = self.tree.selection()
-            if selected:
-                node_id = selected[0]
-                values = self.tree.item(node_id, 'values')
-                if values and len(values) > 0:
-                    path = values[0]
-                    import os
-                    app = self.winfo_toplevel()
-                    if os.path.isfile(path):
-                        # Call editor pane for editing
-                        if hasattr(app, 'open_file_in_editor'):
-                            app.open_file_in_editor(path)
-                        # Call preview pane for supported files (.txt, .md)
-                        ext = os.path.splitext(path)[1].lower()
-                        if ext in ['.txt', '.md'] and hasattr(app, 'preview_pane'):
-                            preview_pane = getattr(app, 'preview_pane', None)
-                            if hasattr(preview_pane, 'load_file_content'):
-                                preview_pane.load_file_content(path)
+            try:
+                selected = self.tree.selection()
+                if selected:
+                    node_id = selected[0]
+                    values = self.tree.item(node_id, 'values')
+                    if values and len(values) > 0:
+                        path = values[0]
+                        import os
+                        app = self.winfo_toplevel()
+                        if os.path.isfile(path):
+                            # Call editor pane for editing
+                            if hasattr(app, 'open_file_in_editor'):
+                                app.open_file_in_editor(path)
+                            # Call preview pane for supported files (.txt, .md)
+                            ext = os.path.splitext(path)[1].lower()
+                            if ext in ['.txt', '.md'] and hasattr(app, 'preview_pane'):
+                                preview_pane = getattr(app, 'preview_pane', None)
+                                if hasattr(preview_pane, 'load_file_content'):
+                                    preview_pane.load_file_content(path)
+            except Exception as e:
+                app = self.winfo_toplevel()
+                if hasattr(app, 'preview_pane') and hasattr(app.preview_pane, 'load_file_content'):
+                    # Show error in preview pane
+                    app.preview_pane.label.configure(text='Preview Pane')
+                    if hasattr(app.preview_pane, 'preview_widget'):
+                        app.preview_pane.preview_widget.destroy()
+                    import customtkinter as ctk
+                    error_msg = (
+                        'Unable to load file preview.\n\n'
+                        f'Error: {e}\n\n'
+                        'Please check the file path, permissions, or file format.'
+                    )
+                    app.preview_pane.preview_widget = ctk.CTkTextbox(
+                        app.preview_pane.inner_frame,
+                        font=('Consolas', 12, 'italic'),
+                        width=780,
+                        height=120,
+                        fg_color='#fff0f0',
+                        text_color='#b91c1c',
+                        border_color='#d0d7de',
+                        border_width=1
+                    )
+                    app.preview_pane.preview_widget.insert('1.0', error_msg)
+                    app.preview_pane.preview_widget.configure(state='disabled')
+                    app.preview_pane.preview_widget.bind('<Key>', lambda e: 'break')
+                    app.preview_pane.preview_widget.pack(fill='x', padx=10, pady=10)
         self.tree.bind('<<TreeviewSelect>>', on_select)
