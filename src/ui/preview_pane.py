@@ -61,12 +61,13 @@ class PreviewPane(ctk.CTkFrame):
                     self.preview_widget.bind('<Key>', lambda e: 'break')
                     self.preview_widget.pack(fill='both', expand=True, padx=10, pady=10)
             else:
-                # Fallback for other types
-                self.preview_widget = ctk.CTkTextbox(self.inner_frame, font=('Consolas', 12), width=780, height=600)
-                self.preview_widget.insert('1.0', content)
+                # Display a message for unsupported file types
+                msg = f'Preview not available for this file type: {ext}'
+                self.preview_widget = ctk.CTkTextbox(self.inner_frame, font=('Consolas', 12), width=780, height=100)
+                self.preview_widget.insert('1.0', msg)
                 self.preview_widget.configure(state='disabled')
                 self.preview_widget.bind('<Key>', lambda e: 'break')
-                self.preview_widget.pack(fill='both', expand=True, padx=10, pady=10)
+                self.preview_widget.pack(fill='x', padx=10, pady=10)
         except Exception as e:
             self.label.configure(text='Preview Pane')
             if hasattr(self, 'preview_widget'):
