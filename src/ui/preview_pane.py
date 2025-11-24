@@ -33,8 +33,22 @@ class PreviewPane(ctk.CTkFrame):
                 self.preview_widget.insert('1.0', content)
                 self.preview_widget.configure(state='disabled')
                 self.preview_widget.pack(fill='both', expand=True, padx=10, pady=10)
+            elif ext == '.md':
+                # Convert markdown to HTML using markdown2 (GitHub-flavored)
+                try:
+                    import markdown2
+                    html = markdown2.markdown(content, extras=['fenced-code-blocks', 'tables', 'strike', 'task_list', 'cuddled-lists', 'metadata', 'code-friendly', 'footnotes', 'header-ids', 'toc', 'github-markdown-css'])
+                except ImportError:
+                    html = '<b>Error:</b> markdown2 is not installed.'
+                # Store HTML for next step (rendering)
+                self._last_html = html
+                # Temporary: show HTML as text until rendering is implemented
+                self.preview_widget = ctk.CTkTextbox(self.inner_frame, font=('Consolas', 12), width=780, height=600)
+                self.preview_widget.insert('1.0', html)
+                self.preview_widget.configure(state='disabled')
+                self.preview_widget.pack(fill='both', expand=True, padx=10, pady=10)
             else:
-                # For now, fallback to previous behavior for other types
+                # Fallback for other types
                 self.preview_widget = ctk.CTkTextbox(self.inner_frame, font=('Consolas', 12), width=780, height=600)
                 self.preview_widget.insert('1.0', content)
                 self.preview_widget.configure(state='disabled')
