@@ -21,26 +21,36 @@ class WorkspacePane(ctk.CTkFrame):
 
         # Bind selection event to open file in editor if file is selected
         def on_select(_event):
+            print('[WorkspacePane] on_select called')
             try:
                 selected = self.tree.selection()
+                print(f'[WorkspacePane] selected: {selected}')
                 if selected:
                     node_id = selected[0]
                     values = self.tree.item(node_id, 'values')
+                    print(f'[WorkspacePane] node_id: {node_id}, values: {values}')
                     if values and len(values) > 0:
                         path = values[0]
                         import os
                         app = self.winfo_toplevel()
+                        print(f'[WorkspacePane] path: {path}')
                         if os.path.isfile(path):
+                            print(f'[WorkspacePane] path is file')
                             # Call editor pane for editing
                             if hasattr(app, 'open_file_in_editor'):
+                                print(f'[WorkspacePane] calling open_file_in_editor')
                                 app.open_file_in_editor(path)
                             # Call preview pane for supported files (.txt, .md)
                             ext = os.path.splitext(path)[1].lower()
+                            print(f'[WorkspacePane] file extension: {ext}')
                             if ext in ['.txt', '.md'] and hasattr(app, 'preview_pane'):
                                 preview_pane = getattr(app, 'preview_pane', None)
                                 if hasattr(preview_pane, 'load_file_content'):
+                                    print(f'[WorkspacePane] calling preview_pane.load_file_content')
                                     preview_pane.load_file_content(path)
+                print('[WorkspacePane] on_select completed')
             except Exception as e:
+                print(f'[WorkspacePane] Error in file selection: {e}')
                 app = self.winfo_toplevel()
                 if hasattr(app, 'preview_pane') and hasattr(app.preview_pane, 'load_file_content'):
                     # Show error in preview pane

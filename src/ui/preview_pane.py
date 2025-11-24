@@ -4,6 +4,8 @@ class PreviewPane(ctk.CTkFrame):
     def __init__(self, master, **kwargs):
         super().__init__(master, width=800, **kwargs)
         # Add a white background frame with padding
+        import tkinter as tk
+        self.native_frame = tk.Frame(self)
         self.inner_frame = ctk.CTkFrame(self, fg_color='#f6f8fa', border_width=1, border_color='#d0d7de')
         self.inner_frame.pack(fill='both', expand=True, padx=5, pady=5)
         # Add preview-specific widgets to inner_frame
@@ -18,24 +20,24 @@ class PreviewPane(ctk.CTkFrame):
         self.label.pack(fill='x', padx=10, pady=(10, 0))
 
     def load_file_content(self, file_path: str) -> None:
-        '''
-        Load and display the content of a file in the preview pane.
-
-        Args:
-            file_path (str): Path to the file to preview.
-        '''
+        print(f'[PreviewPane] load_file_content called for: {file_path}')
         import os
         try:
             ext = os.path.splitext(file_path)[1].lower()
+            print(f'[PreviewPane] file extension: {ext}')
             with open(file_path, 'r', encoding='utf-8') as f:
                 content = f.read()
+            print(f'[PreviewPane] file read successfully')
             self.label.configure(text=f'Preview - {file_path}')
             self.inner_frame.configure(fg_color='white')
             if hasattr(self, 'preview_widget'):
                 self.preview_widget.destroy()
+            # Hide native_frame by default
+            self.native_frame.pack_forget()
+            self.inner_frame.pack(fill='both', expand=True, padx=5, pady=5)
             import customtkinter as ctk
             if ext == '.txt':
-                # Display plain text in a read-only textbox, styled for readability
+                print(f'[PreviewPane] displaying as plain text')
                 self.preview_widget = ctk.CTkTextbox(
                     self.inner_frame,
                     font=('Consolas', 12),
@@ -51,26 +53,41 @@ class PreviewPane(ctk.CTkFrame):
                 self.preview_widget.bind('<Key>', lambda e: 'break')
                 self.preview_widget.pack(fill='both', expand=True, padx=10, pady=10)
             elif ext == '.md':
-                # Convert markdown to HTML using markdown2 (GitHub-flavored)
+                print(f'[PreviewPane] displaying as markdown')
                 try:
                     import markdown2
                     html = markdown2.markdown(content, extras=['fenced-code-blocks', 'tables', 'strike', 'task_list', 'cuddled-lists', 'metadata', 'code-friendly', 'footnotes', 'header-ids', 'toc', 'github-markdown-css'])
+                    print(f'[PreviewPane] markdown2 conversion successful')
+                    # Inject custom CSS
+                    css_path = os.path.join(os.path.dirname(__file__), '../assets/markdown_preview.css')
+                    try:
+                        with open(css_path, 'r', encoding='utf-8') as css_file:
+                            css = css_file.read()
+                        style_tag = f'<style>{css}</style>'
+                        html = style_tag + html
+                        print(f'[PreviewPane] Custom CSS injected')
+                    except Exception as css_error:
+                        print(f'[PreviewPane] Could not load custom CSS: {css_error}')
                 except ImportError:
                     html = '<b>Error:</b> markdown2 is not installed.'
-                # Render HTML in the preview pane using tkinterhtml
+                    print(f'[PreviewPane] markdown2 not installed')
+                # Try to render HTML using tkinterweb
                 try:
-                    from tkinterhtml import HtmlFrame
+                    from tkinterweb import HtmlFrame
                     if hasattr(self, 'preview_widget'):
                         self.preview_widget.destroy()
-                    # Create HtmlFrame for HTML rendering (remove unsupported background option)
-                    self.preview_widget = HtmlFrame(self.inner_frame, horizontal_scrollbar='auto')
-                    self.preview_widget.set_content(html)
+                    print(f'[PreviewPane] creating HtmlFrame (tkinterweb)')
+                    # Hide customtkinter preview pane and show native_frame
+                    self.inner_frame.pack_forget()
+                    self.native_frame.pack(fill='both', expand=True, padx=5, pady=5)
+                    self.preview_widget = HtmlFrame(self.native_frame)
+                    self.preview_widget.load_html(html)
                     self.preview_widget.pack(fill='both', expand=True, padx=10, pady=10)
-                    # Make HtmlFrame strictly read-only (disable selection and editing)
-                    self.preview_widget.bind('<Key>', lambda e: 'break')
-                    self.preview_widget.bind('<Button-3>', lambda e: 'break')
-                except ImportError:
-                    # Fallback: show HTML as text if tkinterhtml is not installed
+                    print(f'[PreviewPane] HtmlFrame (tkinterweb) displayed')
+                except Exception as web_error:
+                    print(f'[PreviewPane] HtmlFrame (tkinterweb) error: {web_error}\nFalling back to textbox preview.')
+                    self.native_frame.pack_forget()
+                    self.inner_frame.pack(fill='both', expand=True, padx=5, pady=5)
                     self.preview_widget = ctk.CTkTextbox(
                         self.inner_frame,
                         font=('Consolas', 12),
@@ -86,7 +103,7 @@ class PreviewPane(ctk.CTkFrame):
                     self.preview_widget.bind('<Key>', lambda e: 'break')
                     self.preview_widget.pack(fill='both', expand=True, padx=10, pady=10)
             else:
-                # Display a message for unsupported file types, styled for readability
+                print(f'[PreviewPane] displaying unsupported file type')
                 msg = f'Preview not available for this file type: {ext}'
                 self.preview_widget = ctk.CTkTextbox(
                     self.inner_frame,
@@ -102,7 +119,9 @@ class PreviewPane(ctk.CTkFrame):
                 self.preview_widget.configure(state='disabled')
                 self.preview_widget.bind('<Key>', lambda e: 'break')
                 self.preview_widget.pack(fill='x', padx=10, pady=10)
+            print(f'[PreviewPane] load_file_content completed')
         except Exception as e:
+            print(f'[PreviewPane] Error loading file: {e}')
             self.label.configure(text='Preview Pane')
             if hasattr(self, 'preview_widget'):
                 self.preview_widget.destroy()
@@ -111,3 +130,4 @@ class PreviewPane(ctk.CTkFrame):
             self.preview_widget.insert('1.0', f'Error loading file: {e}')
             self.preview_widget.configure(state='disabled')
             self.preview_widget.pack(fill='both', expand=True, padx=10, pady=10)
+            print(f'[PreviewPane] load_file_content error handled')
