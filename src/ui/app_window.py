@@ -61,16 +61,19 @@ class AppWindow(ctk.CTk):
         self.preview_pane.pack_propagate(False)
 
         # Live preview: bind text change event
-        def on_editor_change(event=None):
-            label_text = self.editor_pane.label.cget("text")
-            if label_text.endswith('.md'):
-                content = self.editor_pane.text_widget.get("1.0", "end-1c")
-                self.preview_pane.load_markdown_content(content)
-        self.editor_pane.text_widget.bind("<<Modified>>", on_editor_change)
-        # Reset modified flag after handling
-        def reset_modified(event=None):
-            self.editor_pane.text_widget.edit_modified(False)
-        self.editor_pane.text_widget.bind("<<Modified>>", reset_modified)
+        # Debounced live preview update for CEF browser
+        self._preview_update_after_id = None
+        def debounced_preview_update(event=None):
+            if self._preview_update_after_id:
+                self.editor_pane.text_widget.after_cancel(self._preview_update_after_id)
+            def update():
+                label_text = self.editor_pane.label.cget("text")
+                if label_text.endswith('.md'):
+                    content = self.editor_pane.text_widget.get("1.0", "end-1c")
+                    self.preview_pane.load_markdown_content(content)
+                self.editor_pane.text_widget.edit_modified(False)
+            self._preview_update_after_id = self.editor_pane.text_widget.after(500, update)
+        self.editor_pane.text_widget.bind("<<Modified>>", debounced_preview_update)
 
         # Add menu bar (after panes are created)
         self.menu_bar = MenuBar(self)

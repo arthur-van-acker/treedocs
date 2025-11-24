@@ -3,54 +3,39 @@ import customtkinter as ctk
 class PreviewPane(ctk.CTkFrame):
     def load_markdown_content(self, content: str) -> None:
         import os
+        import markdown2
+        from cefpython3 import cefpython as cef
+        html = markdown2.markdown(content, extras=['fenced-code-blocks', 'tables', 'strike', 'task_list', 'cuddled-lists', 'metadata', 'code-friendly', 'footnotes', 'header-ids', 'toc', 'github-markdown-css'])
+        css_path = os.path.join(os.path.dirname(__file__), '../assets/markdown_preview.css')
         try:
-            import markdown2
-            html = markdown2.markdown(content, extras=['fenced-code-blocks', 'tables', 'strike', 'task_list', 'cuddled-lists', 'metadata', 'code-friendly', 'footnotes', 'header-ids', 'toc', 'github-markdown-css'])
-            css_path = os.path.join(os.path.dirname(__file__), '../assets/markdown_preview.css')
-            try:
-                with open(css_path, 'r', encoding='utf-8') as css_file:
-                    css = css_file.read()
-                style_tag = f'<style>{css}</style>'
-                html = style_tag + html
-            except Exception:
-                pass
-        except ImportError:
-            html = '<b>Error:</b> markdown2 is not installed.'
-        # Try to render HTML using tkinterweb
-        try:
-            from tkinterweb import HtmlFrame
-            # If preview_widget is already an HtmlFrame, just update its content
-            if hasattr(self, 'preview_widget') and isinstance(self.preview_widget, HtmlFrame):
-                self.preview_widget.load_html(html)
-            else:
-                # Remove any previous widget and create HtmlFrame
+            with open(css_path, 'r', encoding='utf-8') as css_file:
+                css = css_file.read()
+            style_tag = f'<style>{css}</style>'
+            html = style_tag + html
+        except Exception:
+            pass
+        # Only update if content changed
+        if not hasattr(self, '_last_html') or self._last_html != html:
+            self._last_html = html
+            # Create or update CEF browser widget
+            if not hasattr(self, 'cef_browser'):
+                # Destroy previous widget if exists
                 if hasattr(self, 'preview_widget'):
                     self.preview_widget.destroy()
                 self.inner_frame.pack_forget()
-                self.native_frame.pack(fill='both', expand=True, padx=5, pady=5)
-                self.preview_widget = HtmlFrame(self.native_frame)
-                self.preview_widget.load_html(html)
-                self.preview_widget.pack(fill='both', expand=True, padx=10, pady=10)
-        except Exception:
-            self.native_frame.pack_forget()
-            self.inner_frame.pack(fill='both', expand=True, padx=5, pady=5)
-            import customtkinter as ctk
-            if hasattr(self, 'preview_widget'):
-                self.preview_widget.destroy()
-            self.preview_widget = ctk.CTkTextbox(
-                self.inner_frame,
-                font=('Consolas', 12),
-                width=780,
-                height=600,
-                fg_color='#f6f8fa',
-                text_color='#24292f',
-                border_color='#d0d7de',
-                border_width=1
-            )
-            self.preview_widget.insert('1.0', html)
-            self.preview_widget.configure(state='disabled')
-            self.preview_widget.bind('<Key>', lambda e: 'break')
-            self.preview_widget.pack(fill='both', expand=True, padx=10, pady=10)
+                self.native_frame.pack_forget()
+                # Initialize CEF if not already done
+                if not cef.GetApp():
+                    cef.Initialize()
+                # Create a Tkinter frame for CEF browser
+                import tkinter as tk
+                self.cef_frame = tk.Frame(self)
+                self.cef_frame.pack(fill='both', expand=True, padx=5, pady=5)
+                window_info = cef.WindowInfo()
+                window_info.SetAsChild(self.cef_frame.winfo_id(), [0, 0, 780, 600])
+                self.cef_browser = cef.CreateBrowserSync(window_info, url='data:text/html,' + html)
+            else:
+                self.cef_browser.LoadUrl('data:text/html,' + html)
     def __init__(self, master, **kwargs):
         super().__init__(master, width=800, **kwargs)
         # Add a white background frame with padding
