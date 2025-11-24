@@ -60,6 +60,18 @@ class AppWindow(ctk.CTk):
         self.preview_pane.configure(width=800)
         self.preview_pane.pack_propagate(False)
 
+        # Live preview: bind text change event
+        def on_editor_change(event=None):
+            label_text = self.editor_pane.label.cget("text")
+            if label_text.endswith('.md'):
+                content = self.editor_pane.text_widget.get("1.0", "end-1c")
+                self.preview_pane.load_markdown_content(content)
+        self.editor_pane.text_widget.bind("<<Modified>>", on_editor_change)
+        # Reset modified flag after handling
+        def reset_modified(event=None):
+            self.editor_pane.text_widget.edit_modified(False)
+        self.editor_pane.text_widget.bind("<<Modified>>", reset_modified)
+
         # Add menu bar (after panes are created)
         self.menu_bar = MenuBar(self)
         # Connect zoom actions

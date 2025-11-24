@@ -1,6 +1,56 @@
 import customtkinter as ctk
 
 class PreviewPane(ctk.CTkFrame):
+    def load_markdown_content(self, content: str) -> None:
+        import os
+        try:
+            import markdown2
+            html = markdown2.markdown(content, extras=['fenced-code-blocks', 'tables', 'strike', 'task_list', 'cuddled-lists', 'metadata', 'code-friendly', 'footnotes', 'header-ids', 'toc', 'github-markdown-css'])
+            css_path = os.path.join(os.path.dirname(__file__), '../assets/markdown_preview.css')
+            try:
+                with open(css_path, 'r', encoding='utf-8') as css_file:
+                    css = css_file.read()
+                style_tag = f'<style>{css}</style>'
+                html = style_tag + html
+            except Exception:
+                pass
+        except ImportError:
+            html = '<b>Error:</b> markdown2 is not installed.'
+        # Try to render HTML using tkinterweb
+        try:
+            from tkinterweb import HtmlFrame
+            # If preview_widget is already an HtmlFrame, just update its content
+            if hasattr(self, 'preview_widget') and isinstance(self.preview_widget, HtmlFrame):
+                self.preview_widget.load_html(html)
+            else:
+                # Remove any previous widget and create HtmlFrame
+                if hasattr(self, 'preview_widget'):
+                    self.preview_widget.destroy()
+                self.inner_frame.pack_forget()
+                self.native_frame.pack(fill='both', expand=True, padx=5, pady=5)
+                self.preview_widget = HtmlFrame(self.native_frame)
+                self.preview_widget.load_html(html)
+                self.preview_widget.pack(fill='both', expand=True, padx=10, pady=10)
+        except Exception:
+            self.native_frame.pack_forget()
+            self.inner_frame.pack(fill='both', expand=True, padx=5, pady=5)
+            import customtkinter as ctk
+            if hasattr(self, 'preview_widget'):
+                self.preview_widget.destroy()
+            self.preview_widget = ctk.CTkTextbox(
+                self.inner_frame,
+                font=('Consolas', 12),
+                width=780,
+                height=600,
+                fg_color='#f6f8fa',
+                text_color='#24292f',
+                border_color='#d0d7de',
+                border_width=1
+            )
+            self.preview_widget.insert('1.0', html)
+            self.preview_widget.configure(state='disabled')
+            self.preview_widget.bind('<Key>', lambda e: 'break')
+            self.preview_widget.pack(fill='both', expand=True, padx=10, pady=10)
     def __init__(self, master, **kwargs):
         super().__init__(master, width=800, **kwargs)
         # Add a white background frame with padding
