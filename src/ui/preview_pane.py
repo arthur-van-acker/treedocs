@@ -32,6 +32,7 @@ class PreviewPane(ctk.CTkFrame):
                 self.preview_widget = ctk.CTkTextbox(self.inner_frame, font=('Consolas', 12), width=780, height=600)
                 self.preview_widget.insert('1.0', content)
                 self.preview_widget.configure(state='disabled')
+                self.preview_widget.bind('<Key>', lambda e: 'break')
                 self.preview_widget.pack(fill='both', expand=True, padx=10, pady=10)
             elif ext == '.md':
                 # Convert markdown to HTML using markdown2 (GitHub-flavored)
@@ -49,17 +50,22 @@ class PreviewPane(ctk.CTkFrame):
                     self.preview_widget = HtmlFrame(self.inner_frame, horizontal_scrollbar='auto')
                     self.preview_widget.set_content(html)
                     self.preview_widget.pack(fill='both', expand=True, padx=10, pady=10)
+                    # Make HtmlFrame strictly read-only (disable selection and editing)
+                    self.preview_widget.bind('<Key>', lambda e: 'break')
+                    self.preview_widget.bind('<Button-3>', lambda e: 'break')
                 except ImportError:
                     # Fallback: show HTML as text if tkinterhtml is not installed
                     self.preview_widget = ctk.CTkTextbox(self.inner_frame, font=('Consolas', 12), width=780, height=600)
                     self.preview_widget.insert('1.0', html)
                     self.preview_widget.configure(state='disabled')
+                    self.preview_widget.bind('<Key>', lambda e: 'break')
                     self.preview_widget.pack(fill='both', expand=True, padx=10, pady=10)
             else:
                 # Fallback for other types
                 self.preview_widget = ctk.CTkTextbox(self.inner_frame, font=('Consolas', 12), width=780, height=600)
                 self.preview_widget.insert('1.0', content)
                 self.preview_widget.configure(state='disabled')
+                self.preview_widget.bind('<Key>', lambda e: 'break')
                 self.preview_widget.pack(fill='both', expand=True, padx=10, pady=10)
         except Exception as e:
             self.label.configure(text='Preview Pane')
